@@ -422,7 +422,7 @@
         ...
     }
 
-这个方法比较长，我先解释下它的逻辑吧。根据列表位置获取ItemView，先后从scrapped、cached、exCached、recycled集合中查找相应的ItemView，如果没有找到，就创建（Adapter.createViewHolder()），最后与数据集绑定。其中scrapped、cached和exCached集合定义在RecyclerView.Recycler中，分别表示将要在RecyclerView中删除的ItemView、一级缓存ItemView和二级缓存ItemView，cached集合的大小默认为２，exCached是需要我们通过RecyclerView.ViewCacheExtension自己实现的，默认没有；recycled集合其实是一个Map，定义在RecyclerView.RecycledViewPool中，将ItemView以ItemType分类保存了下来，这里算是RecyclerView设计上的亮点，通过RecyclerView.RecycledViewPool可以实现在不同的RecyclerView之前共享ItemView，只要为这些不同RecyclerView设置同一个RecyclerView.RecycledViewPool就可以了。
+这个方法比较长，我先解释下它的逻辑吧。根据列表位置获取ItemView，先后从scrapped、cached、exCached、recycled集合中查找相应的ItemView，如果没有找到，就创建（Adapter.createViewHolder()），最后与数据集绑定。其中scrapped、cached和exCached集合定义在RecyclerView.Recycler中，分别表示将要在RecyclerView中删除的ItemView、一级缓存ItemView和二级缓存ItemView，cached集合的大小默认为２，exCached是需要我们通过RecyclerView.ViewCacheExtension自己实现的，默认没有；recycled集合其实是一个Map，定义在RecyclerView.RecycledViewPool中，将ItemView以ItemType分类保存了下来，这里算是RecyclerView设计上的亮点，通过RecyclerView.RecycledViewPool可以实现在不同的RecyclerView之间共享ItemView，只要为这些不同RecyclerView设置同一个RecyclerView.RecycledViewPool就可以了。
 　　上面解释了ItemView从不同集合中获取的方式，那么RecyclerView又是在什么时候向这些集合中添加ItemView的呢？下面我逐个介绍下。
 　　scrapped集合中存储的其实是正在执行REMOVE操作的ItemView，这部分会在后文进一步描述。
 　　在fill()方法的循环体中有行代码`recycleByLayoutState(recycler, layoutState);`，最终这个方法会执行到RecyclerView.Recycler.recycleViewHolderInternal()方法：
@@ -454,7 +454,7 @@
 　　最后exCached集合是我们自己创建的，所以添加删除元素也要我们自己实现。
 
 ####数据集、动画
-　　RecyclerView定义了4种针对数据集的操作，分别是ADD、REMOVE、UPDATE、MOVE，封装在了AdapterHelper.UpdateOp类中，并且所有操作由一个大小为30的对象池管理着。当我们要对数据集作任何操作时，都会从这个对象池中取出一个UpdateOp对象，放入一个等待队列中，最后调用RecyclerView.RecyclerViewDataObserver.triggerUpdateProcessor()方法，根据这个等待队列中的信息，对所有子控件重新测量、布局并绘制且执行动画，也就是说对于数据集的操作同时只能有一个。以上就是我们调用Adapter.notifyItemXXX()系列方法后发生的事。
+　　RecyclerView定义了4种针对数据集的操作，分别是ADD、REMOVE、UPDATE、MOVE，封装在了AdapterHelper.UpdateOp类中，并且所有操作由一个大小为30的对象池管理着。当我们要对数据集作任何操作时，都会从这个对象池中取出一个UpdateOp对象，放入一个等待队列中，最后调用RecyclerView.RecyclerViewDataObserver.triggerUpdateProcessor()方法，根据这个等待队列中的信息，对所有子控件重新测量、布局并绘制且执行动画。以上就是我们调用Adapter.notifyItemXXX()系列方法后发生的事。
 　　显然当我们对某个ItemView做操作时，它很有可以会影响到其它ItemView。下面我以REMOVE为例来梳理下这个流程。
 ![remove example](https://raw.githubusercontent.com/zengzg/blog/master/android/images/path5784-2.png)
 　　首先调用Adapter.notifyItemRemove()，追溯到方法RecyclerView.RecyclerViewDataObserver.onItemRangeRemoved()：
