@@ -150,7 +150,7 @@
         dispatchLayoutStep3();
         ...
     }
-可以看出，这里也会执行子控件的measure及layout过程。结合onMeasure方法对skipMeasure的判断可以看出，如果要支持WRAP_CONTENT，那么子控件的measure及layout就会提前在RecyclerView的测量方法中执行完成，这步在源码注释中被称为预布局(pre-layout)，当然，这一过程和之后在onLayout中执行的过程并没有什么不同；如果是其它情况(测量模式为EXACTLY)，子控件的measure及layout过程就会延迟至RecyclerView的layout过程（RecyclerView.onLayout()）中执行。再看onMeasure方法中的mLayout.mAutoMeasure，它表示，RecyclerView的measure及layout过程是否要委托给RecyclerView.LayoutManager，在兼容包中提供的３种RecyclerView.LayoutManager的这个属性默认都是为true的。好了，以上就是RecyclerView的measure及layout过程，下面来看下它的draw过程。
+可以看出，这里也会执行子控件的measure及layout过程。结合onMeasure方法对skipMeasure的判断可以看出，如果要支持WRAP_CONTENT，那么子控件的measure及layout就会提前在RecyclerView的测量方法中执行完成，也就是说，先确定了子控件的大小及位置后，再由此设置RecyclerView的大小；如果是其它情况(测量模式为EXACTLY)，子控件的measure及layout过程就会延迟至RecyclerView的layout过程（RecyclerView.onLayout()）中执行。再看onMeasure方法中的mLayout.mAutoMeasure，它表示，RecyclerView的measure及layout过程是否要委托给RecyclerView.LayoutManager，在兼容包中提供的３种RecyclerView.LayoutManager的这个属性默认都是为true的。好了，以上就是RecyclerView的measure及layout过程，下面来看下它的draw过程。
 　　RecyclerView的draw过程可以分为２部分来看：RecyclerView负责绘制所有decoration；ItemView的绘制由ViewGroup处理，这里的绘制是android常规绘制逻辑，本文就不再阐述了。下面来看看RecyclerView的draw()和onDraw()方法：
 
     @Override
